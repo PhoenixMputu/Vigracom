@@ -119,7 +119,7 @@ const Register = () => {
           accept="image/png, jpg, jpeg"
           id="avatar"
           name="avatar"
-          onChange={handleFileChange}
+          onChange={e => handleFileChange(e)}
         />
         <label htmlFor="password">Mot de passe</label>
         <input
