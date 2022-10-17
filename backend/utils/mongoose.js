@@ -1,9 +1,8 @@
-import mongoose from "mongoose";
-const MONGO_DB_URL = "mongodb+srv://Phoenix243:jmamfPGyj76Ajm6R@cluster0.wjh6smv.mongodb.net/?retryWrites=true&w=majority";
+const mongoose = require("mongoose");
 
-mongoose.connect(MONGO_DB_URL, (err) => {
-  if (err) throw err;
-  console.log("Connected to the DB");
-});
+mongoose
+  .connect(process.env.MONGO_DB_URL)
+  .then(() => console.log("You are connected to a Mongoose database !"))
+  .catch((e) => console.log("Connection failed\n", e));
 
-export default mongoose.connection;
+module.exports = mongoose.connection;
