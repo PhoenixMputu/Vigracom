@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styled from "styled-components";
+import axios from "axios";
 
 const Login = () => {
+  let navigate = useNavigate();
   const [error, setError] = useState({
     pseudo: "",
     password: ""
@@ -46,6 +49,25 @@ const Login = () => {
         position: toast.POSITION.TOP_RIGHT
       });
     }
+
+    const register = axios({
+      method: "post",
+      url: "http://localhost:8080/auth/login",
+      data: form,
+    });
+
+    register
+      .then((response) => {
+        if(response.data.type === "Erreur") {
+          return toast.error(response.data.message, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        }
+
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate(`/home`);
+      })
+      .catch((error) => console.log(error));
   };
 
   return (

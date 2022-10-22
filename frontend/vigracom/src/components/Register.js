@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import styled from "styled-components";
 
 const Register = () => {
+  let navigate = useNavigate();
   const [confirmPassword, setConfirmPassword] = useState("");
   const [previewSource, setPreviewSource] = useState("");
   const [error, setError] = useState({
@@ -13,21 +16,21 @@ const Register = () => {
   const [form, setForm] = useState({
     pseudo: "",
     password: "",
-    avatar: ""
+    avatar: "",
   });
 
-  const handleFileChange = e => {
+  const handleFileChange = (e) => {
     const file = e.target.files[0];
     previewFile(file);
-  }
+  };
 
   const previewFile = (file) => {
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = () => {
-      setPreviewSource(reader.result)
-    }
-  }
+      setPreviewSource(reader.result);
+    };
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -35,13 +38,16 @@ const Register = () => {
   };
 
   const uploadImage = (base64EncodedImage) => {
-    setForm((prevState) => ({ ...prevState, avatar: base64EncodedImage }));
-  }
+    setForm((prevState) => ({
+      ...prevState,
+      avatar: JSON.stringify(base64EncodedImage),
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (previewSource) {
-      uploadImage(previewSource)
+      uploadImage(previewSource);
     }
     if (form.pseudo.length < 4) {
       setError((prevState) => ({
@@ -97,7 +103,24 @@ const Register = () => {
       });
     }
 
-    console.log(form);
+    const register = axios({
+      method: "post",
+      url: "http://localhost:8080/auth/register",
+      data: form,
+    });
+
+    register
+      .then((response) => {
+        if(response.data.type === "Erreur") {
+          return toast.error(response.data.message, {
+            position: toast.POSITION.TOP_RIGHT,
+          });
+        }
+
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        navigate(`/home`);
+      })
+      .catch((error) => console.log(error));
   };
   return (
     <>
@@ -119,7 +142,7 @@ const Register = () => {
           accept="image/png, jpg, jpeg"
           id="avatar"
           name="avatar"
-          onChange={e => handleFileChange(e)}
+          onChange={(e) => handleFileChange(e)}
         />
         <label htmlFor="password">Mot de passe</label>
         <input
@@ -138,10 +161,10 @@ const Register = () => {
           name="Confirmpassword"
           id="Confirmpassword"
           required
-          onChange={e => setConfirmPassword(e.target.value)}
+          onChange={(e) => setConfirmPassword(e.target.value)}
           value={confirmPassword}
         />
-        <input className="btn" type="submit" value="Se connecter" />
+        <input className="btn" type="submit" value="S'inscrire" />
       </Container>
       <ToastContainer />
     </>

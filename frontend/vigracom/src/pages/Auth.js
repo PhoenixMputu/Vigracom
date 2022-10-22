@@ -40,8 +40,8 @@ const Container = styled.div`
     display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    justify-content: space-beetween;
-    align-items: center;
+    justify-content: space-evenly;
+    align-items: space-evenly;
     margin: auto;
     border-radius: 10px;
     box-shadow: 2px 2px 2px 1px rgba(0, 0, 255, .2);
