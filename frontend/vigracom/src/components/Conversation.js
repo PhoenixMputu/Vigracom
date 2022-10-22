@@ -64,7 +64,7 @@ const Conversation = ({ contact }) => {
 
     const createMessage = axios({
       method: "post",
-      url: "http://localhost:8080/conversation",
+      url: "https://207.154.200.61:8080/conversation",
       data: data,
       headers: {
         Authorization: token,

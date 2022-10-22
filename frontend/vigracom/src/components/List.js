@@ -16,7 +16,7 @@ const List = () => {
   useEffect(() => {
     const getUsers = axios({
       method: "get",
-      url: `http://localhost:8080/user/${pseudo}`,
+      url: `http://207.154.200.61/user/${pseudo}`,
       headers: {
         Authorization: token,
       },

@@ -105,7 +105,7 @@ const Register = () => {
 
     const register = axios({
       method: "post",
-      url: "http://localhost:8080/auth/register",
+      url: "http://207.154.200.61:8080/auth/register",
       data: form,
     });
 
