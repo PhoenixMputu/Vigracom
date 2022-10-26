@@ -1,74 +1,80 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import styled from "styled-components";
-import axios from "axios";
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import styled from 'styled-components'
+import axios from 'axios'
 
 const Login = () => {
-  let navigate = useNavigate();
+  let navigate = useNavigate()
   const [error, setError] = useState({
-    pseudo: "",
-    password: ""
-  });
+    pseudo: '',
+    password: ''
+  })
   const [form, setForm] = useState({
-    pseudo: "",
-    password: "",
-  });
+    pseudo: '',
+    password: ''
+  })
 
   const handleChange = (e) => {
-    const {name, value} = e.target;
-    setForm((prevState) => ({ ...prevState, [name]: value }));
+    const { name, value } = e.target
+    setForm((prevState) => ({ ...prevState, [name]: value }))
   }
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+    e.preventDefault()
     if (form.pseudo.length < 4) {
-      setError((prevState) => ({ ...prevState, pseudo: "Le pseudo doit avoir au moins 4 caractères !" }));
+      setError((prevState) => ({
+        ...prevState,
+        pseudo: 'Le pseudo doit avoir au moins 4 caractères !'
+      }))
     }
 
     if (form.pseudo.length > 4) {
-      setError((prevState) => ({ ...prevState, pseudo: "" }));
+      setError((prevState) => ({ ...prevState, pseudo: '' }))
     }
 
     if (error.pseudo) {
       toast.error(error.pseudo, {
         position: toast.POSITION.TOP_LEFT
-      });
+      })
     }
 
     if (form.password.length < 4) {
-      setError((prevState) => ({ ...prevState, password: "Le mot de passe doit avoir au moins 4 caractères !" }));
+      setError((prevState) => ({
+        ...prevState,
+        password: 'Le mot de passe doit avoir au moins 4 caractères !'
+      }))
     }
     if (form.password.length > 4) {
-      setError((prevState) => ({ ...prevState, password: "" }));
+      setError((prevState) => ({ ...prevState, password: '' }))
     }
 
     if (error.password) {
       toast.error(error.password, {
         position: toast.POSITION.TOP_RIGHT
-      });
+      })
     }
 
     const register = axios({
-      method: "post",
-      url: "http://207.154.200.61:8080/auth/login",
-      data: form,
-    });
+      method: 'post',
+      url: 'http://localhost:8080/auth/login',
+      data: form
+    })
 
     register
       .then((response) => {
-        if(response.data.type === "Erreur") {
+        if (response.data.type === 'Erreur') {
           return toast.error(response.data.message, {
-            position: toast.POSITION.TOP_RIGHT,
-          });
+            position: toast.POSITION.TOP_RIGHT
+          })
         }
 
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        navigate(`/home`);
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        navigate('/home')
       })
-      .catch((error) => console.log(error));
-  };
+      .catch((error) => console.log(error))
+  }
 
   return (
     <>
@@ -98,8 +104,8 @@ const Login = () => {
       </Container>
       <ToastContainer />
     </>
-  );
-};
+  )
+}
 
 const Container = styled.form`
   display: flex;
@@ -107,10 +113,10 @@ const Container = styled.form`
   margin: 1.5rem;
   gap: 0.5rem;
   color: #1966ff;
-  font-family: "Oswald", sans-serif;
+  font-family: 'Oswald', sans-serif;
 
   h2 {
-    font-family: "Oswald", sans-serif;
+    font-family: 'Oswald', sans-serif;
     color: #1966ff;
     text-align: center;
     text-transform: uppercase;
@@ -134,10 +140,10 @@ const Container = styled.form`
 
     &:hover {
       cursor: pointer;
-      opacity: .7;
+      opacity: 0.7;
       transform: scale(1.05);
     }
   }
-`;
+`
 
-export default Login;
+export default Login

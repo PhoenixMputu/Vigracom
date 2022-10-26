@@ -1,36 +1,78 @@
-import {useState, useEffect} from "react";
-import styled from "styled-components";
-import avatar from "../assets/avatar.jpg";
-import { AiFillMessage } from "react-icons/ai";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import styled from 'styled-components'
+import { AiFillMessage } from 'react-icons/ai'
+import { useNavigate } from 'react-router-dom'
+import { useStateValue } from '../utils/stateProvider'
 // import { MdContactPage } from "react-icons/md";
-import { IoLogOut } from "react-icons/io5";
+import { IoLogOut } from 'react-icons/io5'
+import avatar from '../assets/avatar.jpg'
+// import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
 
-const Sidebar = () => {
-  let navigate = useNavigate();
+function Sidebar() {
+  const [{ socket }] = useStateValue()
+  const [me, setMe] = useState()
+  // const [notifications, setNotifications] = useState()
+  const [onlineUsers, setOnlineUsers] = useState([])
+  const navigate = useNavigate()
+  const _token = JSON.parse(localStorage.getItem('user'))
+  const { pseudo, token } = _token
+
+  useEffect(() => {
+    socket.emit('add-user', _token.pseudo)
+    socket.on('get-users', (users) => setOnlineUsers(users))
+    socket.on('receive-message', (data) => alert(data.message.send))
+  }, [token])
+
+  console.log(onlineUsers)
+
+  // console.log('Notifications',notifications)
+
+  // eslint-disable-next-line no-underscore-dangle
+
+
+  useEffect(() => {
+    const getMe = axios({
+      method: 'get',
+      url: `http://localhost:8080/user/me/${pseudo}`,
+      headers: {
+        Authorization: token
+      }
+    })
+
+    getMe
+      .then((response) => {
+        setMe(response.data.user.avatar)
+      })
+      .catch((err) => console.log('Erreur', err))
+  }, [pseudo, token])
+
   const logOut = () => {
-    localStorage.removeItem('user');
+    localStorage.removeItem('user')
     navigate('/')
   }
-  
+
   return (
-    <Container>
-      <div className="sidebar-top">
-        <img className="user-avatar" src={avatar} alt="avatar" />
-        <div className="switches">
-          <button className="switch messages-switch">
-            <AiFillMessage color="#fff" size={30} />
+    <>
+      <Container>
+        <div className="sidebar-top">
+          <img className="user-avatar" src={me || avatar} alt="avatar" />
+          <div className="switches">
+            <button type="button" className="switch messages-switch">
+              <AiFillMessage color="#fff" size={30} />
+            </button>
+          </div>
+        </div>
+        <div className="sidebar-bottom">
+          <button type="button" className="logout-btn" onClick={logOut}>
+            <IoLogOut color="#fff" size={40} />
           </button>
         </div>
-      </div>
-      <div className="sidebar-bottom">
-        <button className="logout-btn" onClick={logOut}>
-          <IoLogOut color="#fff" size={40} />
-        </button>
-      </div>
-    </Container>
-  );
-};
+      </Container>
+    </>
+  )
+}
 
 const Container = styled.div`
   background-color: #1966ff;
@@ -47,9 +89,15 @@ const Container = styled.div`
   .sidebar-top {
     margin-bottom: 2rem;
     img {
-      width: 100px;
+      width: 70px;
+      height: 70px;
       border-radius: 100%;
-      margin-right: 35px;
+      margin-right: 50px;
+
+      &:hover {
+        transform: scaleY(1.1);
+        cursor: pointer;
+      }
     }
 
     .switches {
@@ -94,6 +142,6 @@ const Container = styled.div`
       }
     }
   }
-`;
+`
 
-export default Sidebar;
+export default Sidebar

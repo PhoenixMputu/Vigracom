@@ -36,27 +36,34 @@ const io = new Server(server, {
   }
 })
 
-global.onlineUsers = {};
+global.onlineUsers = [];
 
 io.on("connection", (socket) => {
-  // global.chatSocket = socket;
-  console.log(socket.id);
 
   // store a user among online users when connected
-  socket.on("send_message", (userId) => {
-    socket.broadcast.emit("received_message", userId.message);
-    // onlineUsers[userId] = socket.id;
+  socket.on("add-user", (newUserId) => {
+    if (!onlineUsers.some((user) => user.userId === newUserId)) {
+      onlineUsers.push({
+        userId: newUserId,
+        socket: socket.id
+      })
+      console.log("New user connected", onlineUsers);
+    }
+
+    io.emit("get-users", onlineUsers);
   });
 
   // send a message to a specifique user
-  socket.on("send-msg", async (data) => {
-    const sendUserSocket = onlineUsers[data.to];
-    if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("receive", {
-        sender: data.sender,
-        conversationId: data.conversation,
-        message: data.message,
-      });
+  socket.on("send-msg", (data) => {
+
+    const {receverId} = data;
+    const user = onlineUsers.find(user => user.userId === receverId);
+    console.log(user);
+    console.log("Hello World!", receverId);
+    console.log("Data", data);
+
+    if (user) {
+      io.to(user.socket).emit('receive-message', data);
     }
   });
 });

@@ -1,127 +1,124 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
-import styled from "styled-components";
+import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import { ToastContainer, toast } from 'react-toastify'
+import 'react-toastify/dist/ReactToastify.css'
+import styled from 'styled-components'
 
-const Register = () => {
-  let navigate = useNavigate();
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [previewSource, setPreviewSource] = useState("");
+function Register() {
+  const navigate = useNavigate()
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [image, setImage] = useState()
   const [error, setError] = useState({
-    pseudo: "",
-    password: "",
-  });
+    pseudo: '',
+    password: ''
+  })
   const [form, setForm] = useState({
-    pseudo: "",
-    password: "",
-    avatar: "",
-  });
+    pseudo: '',
+    password: '',
+    avatar: ''
+  })
 
-  const handleFileChange = (e) => {
-    const file = e.target.files[0];
-    previewFile(file);
-  };
-
-  const previewFile = (file) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onloadend = () => {
-      setPreviewSource(reader.result);
-    };
-  };
+  const handleImageChange = (imageSelected) => {
+    if (imageSelected) {
+      setImage(imageSelected[0])
+    }
+  }
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm((prevState) => ({ ...prevState, [name]: value }));
-  };
+    const { name, value } = e.target
+    setForm((prevState) => ({ ...prevState, [name]: value }))
+  }
 
-  const uploadImage = (base64EncodedImage) => {
-    setForm((prevState) => ({
-      ...prevState,
-      avatar: JSON.stringify(base64EncodedImage),
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (previewSource) {
-      uploadImage(previewSource);
-    }
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     if (form.pseudo.length < 4) {
       setError((prevState) => ({
         ...prevState,
-        pseudo: "Le pseudo doit avoir au moins 4 caractères !",
-      }));
+        pseudo: 'Le pseudo doit avoir au moins 4 caractères !'
+      }))
     }
 
     if (form.pseudo.length > 4) {
       setError((prevState) => ({
         ...prevState,
-        pseudo: "",
-      }));
+        pseudo: ''
+      }))
     }
 
     if (form.password.length > 4) {
       setError((prevState) => ({
         ...prevState,
-        password: "",
-      }));
+        password: ''
+      }))
     }
 
     if (form.password.length < 4) {
       setError((prevState) => ({
         ...prevState,
-        password: "Le mot de passe doit avoir au moins 4 caractères !",
-      }));
+        password: 'Le mot de passe doit avoir au moins 4 caractères !'
+      }))
     }
 
     if (form.password !== confirmPassword) {
       setError((prevState) => ({
         ...prevState,
-        password: "Les mots de passe ne sont pas identique !",
-      }));
+        password: 'Les mots de passe ne sont pas identique !'
+      }))
     }
 
     if (form.password === confirmPassword) {
       setError((prevState) => ({
         ...prevState,
-        password: "",
-      }));
+        password: ''
+      }))
     }
 
     if (error.pseudo) {
       toast.error(error.pseudo, {
-        position: toast.POSITION.TOP_LEFT,
-      });
+        position: toast.POSITION.TOP_LEFT
+      })
     }
 
     if (error.password) {
       toast.error(error.password, {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+        position: toast.POSITION.TOP_RIGHT
+      })
     }
 
+    const formData = new FormData()
+    formData.append('file', image)
+    formData.append('upload_preset', 'vigracom')
+
+    const response = await axios({
+      method: 'post',
+      url: 'https://api.cloudinary.com/v1_1/dywvbuuqw/upload',
+      data: formData
+    })
+    // eslint-disable-next-line dot-notation
+    const avatar = response.data['secure_url']
+
     const register = axios({
-      method: "post",
-      url: "http://207.154.200.61:8080/auth/register",
-      data: form,
-    });
+      method: 'post',
+      url: 'http://localhost:8080/auth/register',
+      data: { ...form, avatar }
+    })
 
     register
+      // eslint-disable-next-line no-shadow, consistent-return
       .then((response) => {
-        if(response.data.type === "Erreur") {
+        if (response.data.type === 'Erreur') {
           return toast.error(response.data.message, {
-            position: toast.POSITION.TOP_RIGHT,
-          });
+            position: toast.POSITION.TOP_RIGHT
+          })
         }
 
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        navigate(`/home`);
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+        navigate('/home')
       })
-      .catch((error) => console.log(error));
-  };
+      // eslint-disable-next-line no-shadow
+      .catch((error) => console.log(error))
+  }
   return (
     <>
       <Container onSubmit={handleSubmit}>
@@ -142,7 +139,7 @@ const Register = () => {
           accept="image/png, jpg, jpeg"
           id="avatar"
           name="avatar"
-          onChange={(e) => handleFileChange(e)}
+          onChange={(e) => handleImageChange(e.target.files)}
         />
         <label htmlFor="password">Mot de passe</label>
         <input
@@ -168,8 +165,8 @@ const Register = () => {
       </Container>
       <ToastContainer />
     </>
-  );
-};
+  )
+}
 
 const Container = styled.form`
   display: flex;
@@ -177,10 +174,10 @@ const Container = styled.form`
   margin: 1.5rem;
   gap: 0.2rem;
   color: #1966ff;
-  font-family: "Oswald", sans-serif;
+  font-family: 'Oswald', sans-serif;
 
   h2 {
-    font-family: "Oswald", sans-serif;
+    font-family: 'Oswald', sans-serif;
     color: #1966ff;
     text-align: center;
     text-transform: uppercase;
@@ -208,6 +205,6 @@ const Container = styled.form`
       transform: scale(1.05);
     }
   }
-`;
+`
 
-export default Register;
+export default Register

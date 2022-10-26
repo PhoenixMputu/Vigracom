@@ -1,0 +1,6 @@
+# Ignore artifacts
+build
+coverage
+
+report!webVitals.js
+*.md

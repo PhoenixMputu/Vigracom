@@ -13,15 +13,6 @@ module.exports.register = async (request, response) => {
       message: "Veuillez saisir un format valide",
     });
   }
-//   if (avatar) {
-//     cloudinary.v2.uploader.upload(
-//       "avatar",
-//       { upload_preset: "phoenix" },
-//       (error, result) => {
-//         console.log(result, error);
-//       }
-//     );
-//   }
   const existsPseudo = await User.findOne({ pseudo: pseudo });
   if (existsPseudo) {
     return response.status(415).json({

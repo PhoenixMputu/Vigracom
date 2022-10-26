@@ -1,21 +1,19 @@
-import { useState, useEffect, useRef } from "react";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Auth from "./pages/Auth";
-import Chat from "./pages/Chat";
+import React, { useState, useEffect } from 'react'
+import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import Auth from './pages/Auth'
+import Chat from './pages/Chat'
 
 function App() {
-  const [user, setUser] = useState();
-  const socket = useRef();
+  const [user, setUser] = useState()
   useEffect(() => {
-    setUser(localStorage.getItem("user"));
-  }, [user]);
+    setUser(localStorage.getItem('user'))
+  }, [user])
 
   // useEffect(() => {
   //   socket.current = io('http://localhost:8080', {
   //     transportOptions: ["websocket"],
   //   });
   // })
-
 
   return (
     <BrowserRouter>
@@ -33,7 +31,7 @@ function App() {
         )}
       </Routes>
     </BrowserRouter>
-  );
+  )
 }
 
-export default App;
+export default App

@@ -1,91 +1,119 @@
-import { useState, useEffect } from "react";
-import axios from "axios";
-import styled from "styled-components";
-import avatar from "../assets/avatar.jpg";
-import ScrollToBottom from "react-scroll-to-bottom";
-import { MdSend } from "react-icons/md";
-import { AiOutlineCamera } from "react-icons/ai";
-import { SiIconify } from "react-icons/si";
-import { ToastContainer, toast } from "react-toastify";
-import { io } from "socket.io-client";
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import styled from 'styled-components'
+import avatar from '../assets/avatar.jpg'
+import message from '../assets/message.gif'
+import ScrollToBottom from 'react-scroll-to-bottom'
+import { MdSend } from 'react-icons/md'
+import { AiOutlineCamera } from 'react-icons/ai'
+import { SiIconify } from 'react-icons/si'
+import { ToastContainer, toast } from 'react-toastify'
+import { useStateValue } from '../utils/stateProvider'
+// import { io } from 'socket.io-client'
 
-const Conversation = ({ contact }) => {
-  const test = io.connect("http://localhost:8080");
-  const [allMessages, setAllMessages] = useState();
-  const [text, setText] = useState("");
+const Conversation = ({ contact, item }) => {
+  const [{ socket }] = useStateValue()
+  const [allMessages, setAllMessages] = useState()
+  const [text, setText] = useState('')
+  // eslint-disable-next-line
+  // const [onlineUsers, setOnlineUsers] = useState([])
+  // eslint-disable-next-line no-unused-vars
+  const [submitMessage, setSubmitMessage] = useState(false)
   const [data, setData] = useState({
-    send: "",
-    received: "",
-    message: "",
-  });
+    send: '',
+    received: '',
+    message: ''
+  })
 
-  let _token = JSON.parse(localStorage.getItem("user"));
-  const { token, pseudo } = _token;
+  // const debug = null
+
+  let _token = JSON.parse(localStorage.getItem('user'))
+  const { token, pseudo } = _token
+
+  // useEffect(() => {
+  //   if (submitMessage !== null) {
+  //     socket.current.emit('send-message', submitMessage)
+  //   }
+  // }, [submitMessage])
+
+  // useEffect(() => {
+  //   socket.current = io('ws://localhost:8080')
+  //   socket.current.emit('add-user', _token.pseudo)
+  //   socket.current.on('get-users', (users) => setOnlineUsers(users))
+  //   socket.current.on('receive-message', (data) => setAllMessages(prevState => ([...prevState, data.message])))
+  // }, [debug, token])
+
+  // console.log(allMessages)
 
   useEffect(() => {
     setData((prevState) => ({
       ...prevState,
       send: pseudo,
-      received: contact,
-      message: text,
-    }));
-  }, [text, contact, pseudo])
+      received: item,
+      message: text
+    }))
+  }, [text, pseudo, item])
 
-  useEffect(() => {
-    test.on("received_message", (data) => {
-      alert(data.message)
-    })
-  }, [test])
+  // useEffect(() => {
+  //   // test.on("received_message", (data) => {
+  //   // })
+  // }, [test])
 
   useEffect(() => {
     const getMessages = axios({
-      method: "get",
-      url: `http://localhost:8080/conversation/${contact}/${pseudo}`,
+      method: 'get',
+      url: `http://localhost:8080/conversation/${item}/${pseudo}`,
       headers: {
-        Authorization: token,
-      },
-    });
+        Authorization: token
+      }
+    })
 
     getMessages
       .then((response) => {
-        setAllMessages(response.data.messages);
+        setAllMessages(response.data.messages)
       })
-      .catch((err) => console.log(err));
-  }, [contact, pseudo, token]);
-  console.log(allMessages);
+      .catch((err) => console.log(err))
+  }, [item, pseudo, token])
 
   const sendMessage = () => {
-    test.emit("send_message", { message: "Hello world"})
     if (!text) {
-      return toast.error("Vous ne pouvez pas envoyer un message vide", {
-        position: toast.POSITION.TOP_RIGHT,
-      });
+      return toast.error('Vous ne pouvez pas envoyer un message vide', {
+        position: toast.POSITION.TOP_RIGHT
+      })
     }
 
     const createMessage = axios({
-      method: "post",
-      url: "https://207.154.200.61:8080/conversation",
+      method: 'post',
+      url: 'http://localhost:8080/conversation',
       data: data,
       headers: {
-        Authorization: token,
-      },
-    });
+        Authorization: token
+      }
+    })
 
     setText('')
 
     createMessage
       .then((response) => {
-        console.log(response.data.message);
+        console.log('Message envoyé', response.data.message)
+        socket.emit('send-msg', { receverId: item, message: data })
+        setSubmitMessage(!submitMessage)
       })
-      .catch((error) => console.log(error));
-  };
+      .catch((error) => console.log(error))
+  }
+
+  // if (allMessages) {
+  //   const receverId = allMessages.find((received) => received !== pseudo)
+  //   setSubmitMessage({...data, receverId})
+  // }
 
   return (
+    // eslint-disable-next-line react/react-in-jsx-scope
     <Container>
       <div className="header">
-        <img src={avatar} alt="avatar" />
+        <img src={contact.avatar ? contact.avatar : avatar} alt="avatar" />
         <div className="title">
-          <h3>{contact ? contact : "Hello"}</h3>
+          <h3>{contact ? contact.pseudo : 'Hello'}</h3>
         </div>
       </div>
       <ScrollToBottom className="scroll content" mode="top">
@@ -113,9 +141,11 @@ const Conversation = ({ contact }) => {
               )
             )
           ) : (
-            <h1>Commencez une conversation</h1>
+            <img className="gif" src={message} alt="" />
           )
-        ) : <h1>Commencez une conversation</h1>}
+        ) : (
+          <img className="gif" src={message} alt="" />
+        )}
         <ToastContainer />
       </ScrollToBottom>
       <div className="inputMessage">
@@ -133,8 +163,8 @@ const Conversation = ({ contact }) => {
         </button>
       </div>
     </Container>
-  );
-};
+  )
+}
 
 const Container = styled.div`
   background-color: #fff;
@@ -146,11 +176,16 @@ const Container = styled.div`
   width: 100%;
   border-radius: 10px;
   padding: 2rem;
-  font-family: "Oswald", sans-serif;
+  font-family: 'Oswald', sans-serif;
   box-shadow: rgba(0, 0, 0, 0.15) 2.5px 2.5px 3.2px;
 
   h1 {
     text-align: center;
+  }
+
+  .gif {
+    width: 100% !important;
+    height: 90% !important;
   }
 
   .header {
@@ -164,7 +199,9 @@ const Container = styled.div`
     padding-bottom: 0.5rem;
 
     img {
-      width: 10%;
+      width: 50px;
+      height: 50px;
+      border-radius: 100%;
     }
 
     .title {
@@ -272,6 +309,6 @@ const Container = styled.div`
       background-color: #1966ff;
     }
   }
-`;
+`
 
-export default Conversation;
+export default Conversation

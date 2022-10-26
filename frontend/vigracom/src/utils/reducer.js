@@ -1,17 +1,20 @@
+import { io } from 'socket.io-client'
+
 export const initialState = {
-    user: null,
-  };
-  
-  const reducer = (state, action) => {
-    switch (action.type) {
-      case "SET_USER":
-        return {
-          ...state,
-          user: action.user,
-        };
-      default:
-        return state;
+  user: null,
+  socket: io('ws://localhost:8080')
+}
+
+const reducer = (state, action) => {
+  switch (action.type) {
+  case 'SET_USER':
+    return {
+      ...state,
+      user: action.user
     }
-  };
-  
-  export default reducer;
+  default:
+    return state
+  }
+}
+
+export default reducer

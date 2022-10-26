@@ -8,3 +8,12 @@ module.exports.getAllUsers = async (request, response) => {
     users: users,
   });
 };
+
+module.exports.getMe = async (request, response) => {
+  const user = await User.findOne({ pseudo: request.params.pseudo });
+  return response.status(200).send({
+    type: "Success",
+    message: "User",
+    user: user,
+  });
+};
