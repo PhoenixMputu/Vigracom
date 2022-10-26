@@ -18,6 +18,7 @@ function Sidebar() {
   const navigate = useNavigate()
   // token
   const _token = JSON.parse(localStorage.getItem('user'))
+  // H
   const { pseudo, token } = _token
 
   useEffect(() => {
