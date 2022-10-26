@@ -16,6 +16,7 @@ function Sidebar() {
   // const [notifications, setNotifications] = useState()
   const [onlineUsers, setOnlineUsers] = useState([])
   const navigate = useNavigate()
+  // token
   const _token = JSON.parse(localStorage.getItem('user'))
   const { pseudo, token } = _token
 
