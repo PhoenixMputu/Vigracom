@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import styled from 'styled-components'
 import avatar from '../assets/avatar.jpg'
@@ -9,60 +9,62 @@ import { AiOutlineCamera } from 'react-icons/ai'
 import { SiIconify } from 'react-icons/si'
 import { ToastContainer, toast } from 'react-toastify'
 import { useStateValue } from '../utils/stateProvider'
-// import { io } from 'socket.io-client'
+import { AiOutlineCloseCircle } from 'react-icons/ai'
+import Picker from 'emoji-picker-react'
 
 const Conversation = ({ contact, item }) => {
-  const [{ socket }] = useStateValue()
+  const [{ socket, msg }] = useStateValue()
+
   const [allMessages, setAllMessages] = useState()
-  const [text, setText] = useState('')
-  // eslint-disable-next-line
-  // const [onlineUsers, setOnlineUsers] = useState([])
-  // eslint-disable-next-line no-unused-vars
+  const [selectedImage, setSelectedImage] = useState()
+  const [previewLink, setPreviewLink] = useState(null)
   const [submitMessage, setSubmitMessage] = useState(false)
+  const [showEmoji, setShowEmoji] = useState(false)
   const [data, setData] = useState({
     send: '',
     received: '',
-    message: ''
+    message: '',
+    imageUrl: ''
   })
 
-  // const debug = null
+  const messageRef = useRef()
+  const imageRef = useRef()
+
+  useEffect(() => {
+    if (!msg) return
+    if (!allMessages) return
+    setAllMessages([...allMessages, {...msg}])
+    toast.info(`Nouveau message de ${msg.send}`, {
+      position: toast.POSITION.TOP_RIGHT
+    })
+  }, [msg])
+
+  console.log(allMessages)
 
   let _token = JSON.parse(localStorage.getItem('user'))
   const { token, pseudo } = _token
 
-  // useEffect(() => {
-  //   if (submitMessage !== null) {
-  //     socket.current.emit('send-message', submitMessage)
-  //   }
-  // }, [submitMessage])
-
-  // useEffect(() => {
-  //   socket.current = io('ws://localhost:8080')
-  //   socket.current.emit('add-user', _token.pseudo)
-  //   socket.current.on('get-users', (users) => setOnlineUsers(users))
-  //   socket.current.on('receive-message', (data) => setAllMessages(prevState => ([...prevState, data.message])))
-  // }, [debug, token])
-
-  // console.log(allMessages)
-
-  useEffect(() => {
+  const handleChange = (e) => {
     setData((prevState) => ({
       ...prevState,
       send: pseudo,
       received: item,
-      message: text
+      message: e.target.value
     }))
-  }, [text, pseudo, item])
+  }
 
-  // useEffect(() => {
-  //   // test.on("received_message", (data) => {
-  //   // })
-  // }, [test])
+  const cancelImage = () => {
+    imageRef.current.value = ''
+    setSelectedImage(null)
+  }
+
+  console.log(process.env.REACT_APP_URL_API)
 
   useEffect(() => {
     const getMessages = axios({
       method: 'get',
-      url: `http://localhost:8080/conversation/${item}/${pseudo}`,
+      //REACT_APP_URL_API = http://localhost:8080
+      url: `${process.env.REACT_APP_URL_API}/conversation/${item}/${pseudo}`,
       headers: {
         Authorization: token
       }
@@ -75,40 +77,89 @@ const Conversation = ({ contact, item }) => {
       .catch((err) => console.log(err))
   }, [item, pseudo, token])
 
-  const sendMessage = () => {
-    if (!text) {
+  const onEmojiClick = (event) => {
+    messageRef.current.value = messageRef.current.value.concat(event.emoji)
+    messageRef.current.focus()
+  }
+
+  const sendMessage = async () => {
+    if (!messageRef.current.value && !imageRef.current.value) {
       return toast.error('Vous ne pouvez pas envoyer un message vide', {
         position: toast.POSITION.TOP_RIGHT
       })
     }
 
-    const createMessage = axios({
-      method: 'post',
-      url: 'http://localhost:8080/conversation',
-      data: data,
-      headers: {
-        Authorization: token
-      }
-    })
-
-    setText('')
-
-    createMessage
-      .then((response) => {
-        console.log('Message envoyé', response.data.message)
-        socket.emit('send-msg', { receverId: item, message: data })
-        setSubmitMessage(!submitMessage)
+    if (previewLink) {
+      const formData = new FormData()
+      formData.append('file', previewLink)
+      formData.append('upload_preset', 'vigracom')
+      const response = await axios({
+        method: 'post',
+        url: process.env.REACT_APP_URL_CLOUDINARY,
+        data: formData
       })
-      .catch((error) => console.log(error))
+      // eslint-disable-next-line dot-notation
+      const imageUrl = response.data['secure_url']
+
+      const createMessage = axios({
+        method: 'post',
+        url: `${process.env.REACT_APP_URL_API}/conversation`,
+        data: {...data, imageUrl},
+        headers: {
+          Authorization: token
+        }
+      })
+
+      createMessage
+        .then((response) => {
+          console.log(response.data.message)
+          socket.emit('send-msg', { receverId: item, message: response.data.message })
+          setAllMessages([...allMessages, {...response.data.message}])
+          setSubmitMessage(!submitMessage)
+        })
+        .catch((error) => console.log(error))
+
+      imageRef.current.value = ''
+      messageRef.current.value = ''
+      setPreviewLink(null)
+    } else {
+      const createMessage = axios({
+        method: 'post',
+        url: `${process.env.REACT_APP_URL_API}/conversation`,
+        data: data,
+        headers: {
+          Authorization: token
+        }
+      })
+
+      createMessage
+        .then((response) => {
+          console.log('Message envoyé')
+          socket.emit('send-msg', { receverId: item, message: response.data.message })
+          setAllMessages([...allMessages, {...response.data.message}])
+          setSubmitMessage(!submitMessage)
+        })
+        .catch((error) => console.log(error))
+      imageRef.current.value = ''
+      messageRef.current.value = ''
+      setShowEmoji(false)
+    }
+
+    imageRef.current.value = ''
+    messageRef.current.value = ''
+    setPreviewLink(null)
   }
 
-  // if (allMessages) {
-  //   const receverId = allMessages.find((received) => received !== pseudo)
-  //   setSubmitMessage({...data, receverId})
-  // }
+  useEffect(() => {
+    if (!selectedImage) return setPreviewLink(null)
+    const reader = new FileReader()
+    reader.readAsDataURL(selectedImage)
+    reader.onloadend = () => {
+      setPreviewLink(reader.result)
+    }
+  }, [selectedImage])
 
   return (
-    // eslint-disable-next-line react/react-in-jsx-scope
     <Container>
       <div className="header">
         <img src={contact.avatar ? contact.avatar : avatar} alt="avatar" />
@@ -116,25 +167,27 @@ const Conversation = ({ contact, item }) => {
           <h3>{contact ? contact.pseudo : 'Hello'}</h3>
         </div>
       </div>
-      <ScrollToBottom className="scroll content" mode="top">
+      <ScrollToBottom className="scroll content" mode="bottom">
         {allMessages ? (
           allMessages.length !== 0 ? (
             allMessages.map((msg) =>
-              msg.send === contact ? (
-                <div className="message" id="other">
-                  <span className="other">o</span>
-                  <div className="item">
-                    <div className="message-content">
-                      <p>{msg.message}</p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
+              msg.send === pseudo ? (
                 <div className="message" id="you">
                   <span className="other">o</span>
                   <div className="item">
                     <div className="message-content">
                       <p>{msg.message}</p>
+                      {msg.imageUrl && <img src={msg.imageUrl}/>}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="message" id="other">
+                  <span className="other">o</span>
+                  <div className="item">
+                    <div className="message-content">
+                      <p>{msg.message}</p>
+                      {msg.imageUrl && <img src={msg.imageUrl}/>}
                     </div>
                   </div>
                 </div>
@@ -147,16 +200,29 @@ const Conversation = ({ contact, item }) => {
           <img className="gif" src={message} alt="" />
         )}
         <ToastContainer />
+        {showEmoji ? <div style={{ height: '200px', width: '100px' }}><Picker pickerStyle={{ width: '100%' }} onEmojiClick={onEmojiClick}/></div> : null}
       </ScrollToBottom>
       <div className="inputMessage">
-        <div>
+        {previewLink && 
+          <div className='preview'>
+            <div>
+              <AiOutlineCloseCircle onClick={cancelImage}/>
+            </div>
+            <img src={previewLink} alt="preview Image" />
+          </div>
+        }
+        <div className='group'>
+          <input type="text" onChange={handleChange} ref={messageRef} />
+          <SiIconify color="white" onClick={() => setShowEmoji(!showEmoji)} />
           <input
-            type="text"
-            onChange={(e) => setText(e.target.value)}
-            value={text}
+            ref={imageRef}
+            type="file"
+            accept="image/png, image/jpeg"
+            name="image"
+            onChange={(e) => setSelectedImage(e.target.files[0])}
+            className="image-input"
           />
-          <SiIconify color="white" />
-          <AiOutlineCamera />
+          <AiOutlineCamera onClick={() => imageRef.current.click()} />
         </div>
         <button onClick={sendMessage}>
           <MdSend color="white" size={24} />
@@ -245,6 +311,16 @@ const Container = styled.div`
         border-bottom-right-radius: 10px;
         border-top-left-radius: 10px;
         background-color: #cfcfcf;
+
+        .message-content {
+          text-align: left;
+
+          img {
+            background-image: #fff;
+            width: 70%;
+            height: auto;
+          }
+        }
       }
     }
 
@@ -264,12 +340,22 @@ const Container = styled.div`
         border-top-left-radius: 10px;
         border-bottom-left-radius: 10px;
         background-color: #1966ff;
+
+        .message-content {
+          text-align: right;
+
+          img {
+            background-image: #fff;
+            width: 70%;
+            height: auto;
+          }
+        }
       }
     }
   }
 
   .scroll {
-    max-height: 350px;
+    max-height: 270px;
   }
 
   .inputMessage {
@@ -279,10 +365,33 @@ const Container = styled.div`
     margin-top: 1rem;
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
     justify-content: space-between;
     padding-top: 1rem;
 
-    div {
+    .image-input {
+      display: none;
+    }
+
+    .preview {
+      position: relative;
+      width: 100%;
+
+      div {
+        position: absolute;
+        top: 0;
+        right: 0;
+        z-index: 99;
+        transform: translate(-100%, -100%);
+      }
+
+      img {
+        width: 100%;
+        height: 100px;
+      }
+    }
+
+    .group {
       width: 85%;
       padding: 0.5rem;
       background-color: #cfcfcf;

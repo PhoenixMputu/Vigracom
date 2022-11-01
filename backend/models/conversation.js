@@ -6,6 +6,7 @@ const conversationSchema = new mongoose.Schema(
     send: String,
     received: String,
     message: String,
+    imageUrl: String,
   },
   {
     timestamps: true,

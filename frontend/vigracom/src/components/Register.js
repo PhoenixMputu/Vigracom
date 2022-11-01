@@ -86,38 +86,58 @@ function Register() {
       })
     }
 
-    const formData = new FormData()
-    formData.append('file', image)
-    formData.append('upload_preset', 'vigracom')
+    if (image) {
+      const formData = new FormData()
+      formData.append('file', image)
+      formData.append('upload_preset', 'vigracom')
 
-    const response = await axios({
-      method: 'post',
-      url: 'https://api.cloudinary.com/v1_1/dywvbuuqw/upload',
-      data: formData
-    })
-    // eslint-disable-next-line dot-notation
-    const avatar = response.data['secure_url']
-
-    const register = axios({
-      method: 'post',
-      url: 'http://localhost:8080/auth/register',
-      data: { ...form, avatar }
-    })
-
-    register
-      // eslint-disable-next-line no-shadow, consistent-return
-      .then((response) => {
-        if (response.data.type === 'Erreur') {
-          return toast.error(response.data.message, {
-            position: toast.POSITION.TOP_RIGHT
-          })
-        }
-
-        localStorage.setItem('user', JSON.stringify(response.data.user))
-        navigate('/home')
+      const response = await axios({
+        method: 'post',
+        url: process.env.REACT_APP_URL_CLOUDINARY,
+        data: formData
       })
-      // eslint-disable-next-line no-shadow
-      .catch((error) => console.log(error))
+      // eslint-disable-next-line dot-notation
+      const avatar = response.data['secure_url']
+
+      const register = axios({
+        method: 'post',
+        url: `${process.env.REACT_APP_URL_API}/auth/register`,
+        data: { ...form, avatar }
+      })
+
+      register
+        .then((response) => {
+          if (response.data.type === 'Erreur') {
+            return toast.error(response.data.message, {
+              position: toast.POSITION.TOP_RIGHT
+            })
+          }
+
+          localStorage.setItem('user', JSON.stringify(response.data.user))
+          navigate('/home')
+        })
+        // eslint-disable-next-line no-shadow
+        .catch((error) => console.log(error))
+    } else {
+      const register = axios({
+        method: 'post',
+        url: `${process.env.REACT_APP_URL_API}/auth/register`,
+        data: form
+      })
+
+      register
+        .then((response) => {
+          if (response.data.type === 'Erreur') {
+            return toast.error(response.data.message, {
+              position: toast.POSITION.TOP_RIGHT
+            })
+          }
+
+          localStorage.setItem('user', JSON.stringify(response.data.user))
+          navigate('/home')
+        })
+        .catch((error) => console.log(error))
+    }
   }
   return (
     <>

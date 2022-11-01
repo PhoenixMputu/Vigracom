@@ -6,12 +6,13 @@ exports.createMessage = (req, res) => {
     send: req.body.send,
     received: req.body.received,
     message: req.body.message,
+    imageUrl: req.body.imageUrl
   });
   message
     .save()
     .then(() => {
       res.status(201).json({
-        message: "Post saved successfully!",
+        message
       });
     })
     .catch((error) => {

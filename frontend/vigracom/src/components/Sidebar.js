@@ -1,54 +1,34 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
 import styled from 'styled-components'
 import { AiFillMessage } from 'react-icons/ai'
 import { useNavigate } from 'react-router-dom'
 import { useStateValue } from '../utils/stateProvider'
-// import { MdContactPage } from "react-icons/md";
 import { IoLogOut } from 'react-icons/io5'
 import avatar from '../assets/avatar.jpg'
-// import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 
 function Sidebar() {
-  const [{ socket }] = useStateValue()
-  const [me, setMe] = useState()
-  // const [notifications, setNotifications] = useState()
+  const [{ socket, msg }, dispatch ] = useStateValue()
   const [onlineUsers, setOnlineUsers] = useState([])
+  const [newMessgage, setNewMessgae] = useState()
   const navigate = useNavigate()
-  // token
   const _token = JSON.parse(localStorage.getItem('user'))
-  // H
   const { pseudo, token } = _token
 
   useEffect(() => {
-    socket.emit('add-user', _token.pseudo)
+    socket.emit('add-user', pseudo)
     socket.on('get-users', (users) => setOnlineUsers(users))
-    socket.on('receive-message', (data) => alert(data.message.send))
+    socket.on('receive-message', (data) => setNewMessgae(data.message))
   }, [token])
 
-  console.log(onlineUsers)
-
-  // console.log('Notifications',notifications)
-
-  // eslint-disable-next-line no-underscore-dangle
-
-
   useEffect(() => {
-    const getMe = axios({
-      method: 'get',
-      url: `http://localhost:8080/user/me/${pseudo}`,
-      headers: {
-        Authorization: token
-      }
+    dispatch({
+      type: 'SET_MSG',
+      msg: newMessgage
     })
+  }, [newMessgage, msg])
 
-    getMe
-      .then((response) => {
-        setMe(response.data.user.avatar)
-      })
-      .catch((err) => console.log('Erreur', err))
-  }, [pseudo, token])
+  console.log(onlineUsers)
 
   const logOut = () => {
     localStorage.removeItem('user')
@@ -59,7 +39,7 @@ function Sidebar() {
     <>
       <Container>
         <div className="sidebar-top">
-          <img className="user-avatar" src={me || avatar} alt="avatar" />
+          <img className="user-avatar" src={_token.avatar || avatar} alt="avatar" />
           <div className="switches">
             <button type="button" className="switch messages-switch">
               <AiFillMessage color="#fff" size={30} />

@@ -20,7 +20,7 @@ function List() {
   useEffect(() => {
     const getUsers = axios({
       method: 'get',
-      url: `http://localhost:8080/user/${pseudo}`,
+      url: `${process.env.REACT_APP_URL_API}/user/${pseudo}`,
       headers: {
         Authorization: token
       }
@@ -88,7 +88,7 @@ const Container = styled.div`
   }
 
   .scroll {
-    height: 400px;
+    height: 450px;
 
     .user_item {
       display: flex;

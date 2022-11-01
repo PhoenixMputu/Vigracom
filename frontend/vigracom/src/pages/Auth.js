@@ -1,25 +1,47 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import styled from 'styled-components'
 import brand from '../assets/brand.svg'
 import Login from '../components/Login'
 import Register from '../components/Register'
+import { ThreeCircles } from 'react-loader-spinner'
 
 const Auth = () => {
   const [login, setLogin] = useState(true)
+  const [loader, setLoader] = useState(true)
+
+  setTimeout(() => { setLoader(false) }, 3000)
+
   return (
     <Container>
-      <div className="container">
-        <div className="brand">
-          <h1>VIGRACOM</h1>
-          <p>Vivez la communication en grand</p>
-          <img src={brand} alt="Illustraction-brand" />
-          <button onClick={() => setLogin(!login)}>
-            {' '}
-            {login ? 'Créez un compte ?' : 'Avez-vous un compte ?'}
-          </button>
+      {loader ? (
+        <div className="center">
+          <ThreeCircles
+            height="100"
+            width="100"
+            color="#1966ff"
+            visible={true}
+            ariaLabel="three-circles-rotating"
+            outerCircleColor=""
+            innerCircleColor=""
+            middleCircleColor=""
+          />
         </div>
-        <div className="form-section">{login ? <Login /> : <Register />}</div>
-      </div>
+      ) : (
+        <div className="container">
+          <div className="brand">
+            <h1>VIGRACOM</h1>
+            <p>Vivez la communication en grand</p>
+            <img src={brand} alt="Illustraction-brand" />
+            <button onClick={() => setLogin(!login)}>
+              {' '}
+              {login ? 'Créez un compte ?' : 'Avez-vous un compte ?'}
+            </button>
+          </div>
+          <div className="form-section">
+            {login ? <Login /> : <Register />}
+          </div>
+        </div>
+      )}
     </Container>
   )
 }
@@ -30,6 +52,13 @@ const Container = styled.div`
   position: relative;
   overflow: hidden;
   width: 100%;
+
+  .center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
 
   .container {
     position: absolute;
